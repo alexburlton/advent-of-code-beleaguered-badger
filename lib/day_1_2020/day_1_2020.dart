@@ -1,6 +1,6 @@
 import 'package:trotter/trotter.dart';
 
-import '../utils/utils.dart';
+import 'package:beleaguered_badger/utils/utils.dart';
 
 void main(List<String> arguments) {
   final inputLines = readIntegerList('day_1_2020/input.txt');

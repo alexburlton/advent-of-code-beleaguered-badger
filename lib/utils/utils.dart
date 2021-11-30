@@ -9,6 +9,6 @@ List<int> readIntegerList(String filename) =>
  readStringList(filename).map((line) => int.parse(line)).toList();
 
 List<String> readStringList(String filename) {
-  final input = File('bin/$filename').readAsStringSync();
+  final input = File('lib/$filename').readAsStringSync();
   return input.split('\n').toList();
 }

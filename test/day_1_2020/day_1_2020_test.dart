@@ -1,7 +1,8 @@
+import 'package:kt_dart/kt.dart';
 import 'package:test/test.dart';
 import 'package:beleaguered_badger/day_1_2020/day_1_2020.dart';
 
-final List<int> testReport = [1721, 979, 366, 299, 675, 1456];
+final KtList<int> testReport = listOf(1721, 979, 366, 299, 675, 1456);
 
 void main() {
     test('sums to 2020', () {

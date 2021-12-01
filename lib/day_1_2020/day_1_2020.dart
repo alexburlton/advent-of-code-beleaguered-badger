@@ -1,3 +1,4 @@
+import 'package:kt_dart/kt.dart';
 import 'package:trotter/trotter.dart';
 
 import 'package:beleaguered_badger/utils/utils.dart';
@@ -9,9 +10,10 @@ void main(List<String> arguments) {
   print('Part B: ${getExpenseReportProduct(inputLines, 3)}');
 }
 
-num getExpenseReportProduct(List<int> report, int count) {
-  final correctCombos = report.combinations(count)().where((combo) => sumsTo2020(combo));
+num getExpenseReportProduct(KtList<int> report, int count) {
+  final combos = report.asList().combinations(count)().map((it) => it.map((element) => element.toInt()).toList()).toList();
+  final correctCombos = combos.where((combo) => sumsTo2020(combo));
   return correctCombos.first.product();
 }
 
-bool sumsTo2020(List<num> list) => list.sum() == 2020;
+bool sumsTo2020(List<int> list) => list.toKtList().sum() == 2020;

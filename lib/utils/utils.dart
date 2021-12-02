@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:kt_dart/kt.dart';
+import 'package:collection/collection.dart';
 
 extension IntListUtils on List<num> {
   num sum() => reduce((value, element) => value + element);
@@ -20,3 +21,6 @@ KtList<String> readStringList(String filename) {
   final input = File('lib/$filename').readAsStringSync();
   return input.split('\n').toKtList();
 }
+
+T? enumFromString<T>(Iterable<T> values, String value) =>
+  values.firstWhereOrNull((type) => type.toString().split(".").last == value);

@@ -14,6 +14,11 @@ extension ListUtils<T> on List<T> {
   }
 }
 
+extension KtListUtils<T> on KtList<T> {
+  T? modalValue() => this.groupBy((item) => item).maxBy((mapEntry) => mapEntry.value.size)?.key;
+  T? antiModalValue() => this.groupBy((item) => item).minBy((mapEntry) => mapEntry.value.size)?.key;
+}
+
 KtList<int> readIntegerList(String filename) =>
  readStringList(filename).map((line) => int.parse(line)).toList();
 

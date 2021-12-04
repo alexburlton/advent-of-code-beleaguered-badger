@@ -76,6 +76,7 @@ int getWinningScore(Iterable<int> bingoNumbers, KtList<BingoBoard> bingoBoards) 
     }
   }
 
+  print('butterfingers');
   return -1;
 }
 
@@ -101,6 +102,3 @@ BingoBoard? getLosingBoard(Iterable<int> bingoNumbers, KtList<BingoBoard> bingoB
 
   return null;
 }
-
-
-

@@ -36,13 +36,33 @@ extension KtListUtils<T> on KtList<T> {
   }
 }
 
+extension GridUtils<T> on KtList<KtList<T>> {
+  KtList<KtList<T>> transpose() {
+    final rowList = List<int>.generate(size, (i) => i).toKtList();
+    final columnList = List<int>.generate(this[0].size, (i) => i).toKtList();
+
+    return columnList.map((colIndex) {
+        return rowList.map((rowIndex) {
+          return this[rowIndex][colIndex];
+      });
+    });
+  }
+}
+
 KtList<int> readIntegerList(String filename) =>
  readStringList(filename).map((line) => int.parse(line)).toList();
 
 KtList<String> readStringList(String filename) {
-  final input = File('lib/$filename').readAsStringSync();
+  final input = readFile(filename);
   return input.split('\n').toKtList();
 }
+
+KtList<String> readDoubleSpacedList(String filename) {
+  final input = readFile(filename);
+  return input.split('\n\n').toKtList();
+}
+
+String readFile(String filename) => File('lib/$filename').readAsStringSync();
 
 T? enumFromString<T>(Iterable<T> values, String value) =>
   values.firstWhereOrNull((type) => type.toString().split(".").last == value);

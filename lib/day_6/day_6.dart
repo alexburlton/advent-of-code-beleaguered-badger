@@ -28,14 +28,12 @@ int _countFishAfterDays(KtMap<int, int> hmFishToCount, int days) {
 
 KtMap<int, int> _doTick(KtMap<int, int> hmFishToCount) {
   var newMap = mutableMapFrom<int, int>();
-  newMap[8] = hmFishToCount.getOrDefault(0, 0);
-  newMap[7] = hmFishToCount.getOrDefault(8, 0);
-  newMap[6] = hmFishToCount.getOrDefault(7, 0) + hmFishToCount.getOrDefault(0, 0);
-  newMap[5] = hmFishToCount.getOrDefault(6, 0);
-  newMap[4] = hmFishToCount.getOrDefault(5, 0);
-  newMap[3] = hmFishToCount.getOrDefault(4, 0);
-  newMap[2] = hmFishToCount.getOrDefault(3, 0);
-  newMap[1] = hmFishToCount.getOrDefault(2, 0);
-  newMap[0] = hmFishToCount.getOrDefault(1, 0);
+  for (var newStage=0; newStage<=8; newStage++) {
+    final prevStage = (newStage + 1) % 9;
+    newMap[newStage] = hmFishToCount.getOrDefault(prevStage, 0);
+  }
+
+  // Add in new fish
+  newMap[6] = newMap.getValue(6) + hmFishToCount.getOrDefault(0, 0);
   return newMap.toMap();
 }

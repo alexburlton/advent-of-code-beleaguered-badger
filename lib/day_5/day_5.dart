@@ -39,14 +39,14 @@ class Line {
     if (start.x == end.x) {
         final startY = min(start.y, end.y);
         final endY = max(start.y, end.y);
-        final yCoords = List<int>.generate(endY - startY + 1, (i) => startY + i).toKtList();
+        final yCoords = makeInclusiveList(startY, endY);
         return yCoords.map((y) => Point(start.x, y));
     }
 
     final m = (end.y - start.y) ~/ (end.x - start.x);
     final c = start.y - (m * start.x);
 
-    final xCoords = List<int>.generate(end.x - start.x + 1, (i) => start.x + i).toKtList();
+    final xCoords = makeInclusiveList(start.x, end.x);
 
     return xCoords.map((x) => Point(x, (m*x) + c));
   }

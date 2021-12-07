@@ -64,5 +64,8 @@ KtList<String> readDoubleSpacedList(String filename) {
 
 String readFile(String filename) => File('lib/$filename').readAsStringSync();
 
+KtList<int> makeInclusiveList(int min, int max) =>
+    List<int>.generate(max - min + 1, (i) => min + i).toKtList();
+
 T? enumFromString<T>(Iterable<T> values, String value) =>
   values.firstWhereOrNull((type) => type.toString().split(".").last == value);

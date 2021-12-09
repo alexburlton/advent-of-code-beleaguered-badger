@@ -3,32 +3,9 @@ import 'dart:math';
 import 'package:beleaguered_badger/utils/utils.dart';
 import 'package:kt_dart/kt.dart';
 
-class Point {
-  final int x;
-  final int y;
-
-  const Point(this.x, this.y);
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Point &&
-          runtimeType == other.runtimeType &&
-          x == other.x &&
-          y == other.y);
-
-  @override
-  int get hashCode => x.hashCode ^ y.hashCode;
-
-  @override
-  String toString() {
-    return '($x, $y)';
-  }
-}
-
 class Line {
-  final Point start;
-  final Point end;
+  final Point<int> start;
+  final Point<int> end;
 
   const Line(this.start, this.end);
 
@@ -80,7 +57,7 @@ Line parseLine(String lineStr) {
   final parsedPoints = listOf(parsePoint(points[0]), parsePoint(points[1])).sortedBy((pt) => pt.x);
   return Line(parsedPoints[0], parsedPoints[1]);
 }
-Point parsePoint(String pointStr) {
+Point<int> parsePoint(String pointStr) {
   final xAndY = pointStr.split(",");
   return Point(int.parse(xAndY[0]), int.parse(xAndY[1]));
 }

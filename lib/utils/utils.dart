@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:kt_dart/kt.dart';
 import 'package:collection/collection.dart';
@@ -61,6 +62,31 @@ KtList<String> readDoubleSpacedList(String filename) {
   final input = readFile(filename);
   return input.split('\n\n').toKtList();
 }
+
+KtMap<Point, int> readIntegerGrid(String filename) {
+  final list = readStringList(filename);
+  final rowLength = list[0].length;
+  final map = mutableMapFrom<Point, int>();
+  for (var x=0; x<rowLength; x++) {
+    for (var y=0; y<list.size; y++) {
+      final pt = Point(x, y);
+      final value = int.parse(list[y][x]);
+      map[pt] = value;
+    }
+  }
+
+  return map.toMap();
+}
+
+extension MoreGridUtils<T> on KtMap<Point, T> {
+  KtList<T> getNeighbourValues(Point pt) {
+    final neighbourPts = getNeighbourPoints(pt);
+    return neighbourPts.mapNotNull<T?>((pt) => this[pt]).map((value) => value!);
+  }
+}
+
+KtList<Point> getNeighbourPoints(Point pt) =>
+  [Point(pt.x, pt.y-1), Point(pt.x, pt.y+1), Point(pt.x+1, pt.y), Point(pt.x-1, pt.y)].toKtList();
 
 String readFile(String filename) => File('lib/$filename').readAsStringSync();
 

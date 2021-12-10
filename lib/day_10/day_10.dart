@@ -1,12 +1,6 @@
 import 'package:beleaguered_badger/utils/utils.dart';
 import 'package:kt_dart/kt.dart';
 
-void main(List<String> arguments) {
-  final input = readStringList('day_10/input.txt');
-  partA(input);
-  partB(input);
-}
-
 final _bracketMap = {
   '(': ')',
   '[': ']',
@@ -46,6 +40,11 @@ class LineParseResult {
   }
 }
 
+void main(List<String> arguments) {
+  final input = readStringList('day_10/input.txt');
+  partA(input);
+  partB(input);
+}
 
 void partA(KtList<String> input) {
   final errorSum = input.map(parseBracketLine).sumBy((p0) => p0.syntaxErrorScore);
@@ -56,13 +55,11 @@ LineParseResult parseBracketLine(String inputLine) {
   final openedBrackets = mutableListOf<String>();
 
   for (var i=0; i<inputLine.length; i++) {
-    final lastOpened = openedBrackets.lastOrNull();
-    final expectedClose = lastOpened != null ? _bracketMap[lastOpened] : null;
     final char = inputLine[i];
-    if (char == expectedClose) {
-      openedBrackets.removeAt(openedBrackets.size - 1);
-    } else if (_isOpeningBracket(char)) {
+    if (_isOpeningBracket(char)) {
       openedBrackets.add(char);
+    } else if (char == _bracketMap[openedBrackets.last()]) {
+      openedBrackets.removeAt(openedBrackets.size - 1);
     } else {
       // Syntax error
       return LineParseResult(openedBrackets.toList(), _bracketScores.getValue(char));

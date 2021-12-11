@@ -83,10 +83,27 @@ extension MoreGridUtils<T> on KtMap<Point, T> {
     final neighbourPts = getNeighbourPoints(pt);
     return neighbourPts.mapNotNull<T?>((pt) => this[pt]).map((value) => value!);
   }
+
+  void printGrid() {
+    final xValues = keys.map((pt) => pt.x);
+    final yValues = keys.map((pt) => pt.y);
+
+    for (var y=yValues.min()!; y<=yValues.max()!; y++) {
+      var line = "";
+      for (var x=xValues.min()!; x<=xValues.max()!; x++) {
+        line += getValue(Point(x, y)).toString();
+      }
+
+      print(line);
+    }
+  }
 }
 
 KtList<Point> getNeighbourPoints(Point pt) =>
   [Point(pt.x, pt.y-1), Point(pt.x, pt.y+1), Point(pt.x+1, pt.y), Point(pt.x-1, pt.y)].toKtList();
+
+KtList<Point> getNeighboursPointsWithDiagonals(Point pt) =>
+    getNeighbourPoints(pt) + [Point(pt.x+1, pt.y-1), Point(pt.x+1, pt.y+1), Point(pt.x-1, pt.y-1), Point(pt.x-1, pt.y+1)].toKtList();
 
 String readFile(String filename) => File('lib/$filename').readAsStringSync();
 

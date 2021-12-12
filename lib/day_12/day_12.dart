@@ -23,6 +23,13 @@ class CaveNetwork {
   }
 }
 
+void main(List<String> arguments) {
+  final input = readStringList('day_12/input.txt');
+  final caveNetwork = _parseCaveNetwork(input);
+  partA(caveNetwork);
+  partB(caveNetwork);
+}
+
 KtList<KtList<String>> _addToAllPaths(String cave, KtList<KtList<String>> pathsSoFar) =>
   pathsSoFar.map((path) => path + listOf(cave));
 
@@ -40,13 +47,6 @@ bool _isValidPathPartB(KtList<String> path) {
 }
 
 bool _isCompletePath(KtList<String> path) => path.last() == "end";
-
-void main(List<String> arguments) {
-  final input = readStringList('day_12/input.txt');
-  final caveNetwork = _parseCaveNetwork(input);
-  partA(caveNetwork);
-  partB(caveNetwork);
-}
 
 CaveNetwork _parseCaveNetwork(KtList<String> input) {
   final map = mutableMapFrom<String, KtList<String>>();

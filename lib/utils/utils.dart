@@ -99,6 +99,13 @@ extension MoreGridUtils<T> on KtMap<Point, T> {
   }
 }
 
+extension MapUtils<K, V> on KtMutableMap<K, KtList<V>> {
+  void putInList(K key, V value) {
+    final currentList = getOrDefault(key, emptyList());
+    this[key] = currentList + listOf(value);
+  }
+}
+
 KtList<Point> getNeighbourPoints(Point pt) =>
   [Point(pt.x, pt.y-1), Point(pt.x, pt.y+1), Point(pt.x+1, pt.y), Point(pt.x-1, pt.y)].toKtList();
 

@@ -106,6 +106,13 @@ extension MapUtils<K, V> on KtMutableMap<K, KtList<V>> {
   }
 }
 
+extension CountMapUtils<K, V> on KtMutableMap<K, int> {
+  void incrementCountBy(K key, { int amount=1 }) {
+    final currentCount = getOrDefault(key, 0);
+    this[key] = currentCount + amount;
+  }
+}
+
 KtList<Point> getNeighbourPoints(Point pt) =>
   [Point(pt.x, pt.y-1), Point(pt.x, pt.y+1), Point(pt.x+1, pt.y), Point(pt.x-1, pt.y)].toKtList();
 

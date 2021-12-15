@@ -13,16 +13,15 @@ void main(List<String> arguments) {
 }
 
 void partA() {
-  final startPt = Point(0, 0);
-  final endPt = map.keys.maxBy((pt) => pt.x + pt.y)!;
-
-  final paths = _getAllPaths(startPt, endPt);
-  print(_getPathCost(paths.first()) - map.getValue((Point(0, 0))));
+  _findShortestPath();
 }
 
 void partB() {
-  replicateMap();
+  _replicateMap();
+  _findShortestPath();
+}
 
+void _findShortestPath() {
   final startPt = Point(0, 0);
   final endPt = map.keys.maxBy((pt) => pt.x + pt.y)!;
 
@@ -31,7 +30,7 @@ void partB() {
   print(_getPathCost(paths.first()) - map.getValue((Point(0, 0))));
 }
 
-void replicateMap() {
+void _replicateMap() {
   final endPt = map.keys.maxBy((pt) => pt.x + pt.y)!;
   print(endPt);
   final width = endPt.x + 1;

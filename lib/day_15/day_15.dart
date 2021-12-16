@@ -22,17 +22,20 @@ void partB() {
 }
 
 void _findShortestPath() {
+  final startTime = DateTime.now().millisecondsSinceEpoch;
   final startPt = Point(0, 0);
   final endPt = map.keys.maxBy((pt) => pt.x + pt.y)!;
 
   final paths = _getAllPaths(startPt, endPt);
   print('-------');
   print(_getPathCost(paths.first()) - map.getValue((Point(0, 0))));
+  final timeTaken = DateTime.now().millisecondsSinceEpoch - startTime;
+  print('${timeTaken}ms');
+  print('-------');
 }
 
 void _replicateMap() {
   final endPt = map.keys.maxBy((pt) => pt.x + pt.y)!;
-  print(endPt);
   final width = endPt.x + 1;
   final height = endPt.y + 1;
 

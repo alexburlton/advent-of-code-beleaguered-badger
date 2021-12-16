@@ -15,6 +15,10 @@ extension ListUtils<T> on List<T> {
   }
 }
 
+extension IntKtListUtils on KtList<int> {
+  int product() => fold(1, (value, element) => value * element);
+}
+
 extension KtListUtils<T> on KtList<T> {
   KtList<T> modalValues() {
     final map = this.groupBy((item) => item);

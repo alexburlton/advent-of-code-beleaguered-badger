@@ -67,14 +67,14 @@ KtList<String> readDoubleSpacedList(String filename) {
   return input.split('\n\n').toKtList();
 }
 
-KtMap<Point, int> readIntegerGrid(String filename) {
-  final list = readStringList(filename);
+KtMap<Point, int> readIntegerGrid(String filename) => parseIntegerGrid(readStringList(filename));
+KtMap<Point, int> parseIntegerGrid(KtList<String> list, [int Function(String) parser=int.parse]) {
   final rowLength = list[0].length;
   final map = mutableMapFrom<Point, int>();
   for (var x=0; x<rowLength; x++) {
     for (var y=0; y<list.size; y++) {
       final pt = Point(x, y);
-      final value = int.parse(list[y][x]);
+      final value = parser(list[y][x]);
       map[pt] = value;
     }
   }
@@ -87,6 +87,11 @@ extension MoreGridUtils<T> on KtMap<Point, T> {
     final neighbourPts = getNeighbourPoints(pt);
     return neighbourPts.mapNotNull<T?>((pt) => this[pt]).map((value) => value!);
   }
+
+  num xMin() => keys.map((pt) => pt.x).min()!;
+  num xMax() => keys.map((pt) => pt.x).max()!;
+  num yMin() => keys.map((pt) => pt.y).min()!;
+  num yMax() => keys.map((pt) => pt.y).max()!;
 
   void printGrid() {
     final xValues = keys.map((pt) => pt.x);
@@ -123,6 +128,11 @@ KtList<Point> getNeighbourPoints(Point pt) =>
 KtList<Point> getNeighboursPointsWithDiagonals(Point pt) =>
     getNeighbourPoints(pt) + [Point(pt.x+1, pt.y-1), Point(pt.x+1, pt.y+1), Point(pt.x-1, pt.y-1), Point(pt.x-1, pt.y+1)].toKtList();
 
+KtList<Point> getAllNeighboursSorted(Point pt) {
+  final neighboursPlusSelf = getNeighboursPointsWithDiagonals(pt) + listOf(pt);
+  return neighboursPlusSelf.sortedBy((pt) => (10000 * pt.y) + pt.x);
+}
+
 String readFile(String filename) => File('lib/$filename').readAsStringSync();
 
 KtList<int> makeInclusiveList(int min, int max) =>
@@ -130,3 +140,5 @@ KtList<int> makeInclusiveList(int min, int max) =>
 
 T? enumFromString<T>(Iterable<T> values, String value) =>
   values.firstWhereOrNull((type) => type.toString().split(".").last == value);
+
+int parseBinaryString(String str) => int.parse(str, radix: 2);

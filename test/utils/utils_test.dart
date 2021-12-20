@@ -22,4 +22,18 @@ void main() {
     expect(neighbours.size, equals(8));
     expect(neighbours.iter, containsAll([Point(0, 0), Point(0, 1), Point(0, 2), Point(1, 0), Point(1, 2), Point(2, 0), Point(2, 1), Point(2, 2)]));
   });
+
+  test('sorted neighbours', () {
+    final neighbours = getAllNeighboursSorted(Point(5, 10));
+    expect(neighbours[0], equals(Point(4, 9)));
+    expect(neighbours[1], equals(Point(5, 9)));
+    expect(neighbours[2], equals(Point(6, 9)));
+    expect(neighbours[3], equals(Point(4, 10)));
+    expect(neighbours[4], equals(Point(5, 10)));
+    expect(neighbours[5], equals(Point(6, 10)));
+  });
+
+  test('parse binary', () {
+    expect(parseBinaryString('011001'), equals(25));
+  });
 }

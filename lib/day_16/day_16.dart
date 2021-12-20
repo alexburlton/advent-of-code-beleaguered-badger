@@ -16,7 +16,7 @@ class LiteralPacket extends Packet {
   final int value;
 
   LiteralPacket(int version, int id, String groupString):
-      value = _parseBinaryString(groupString), super(version, id);
+      value = parseBinaryString(groupString), super(version, id);
 
   @override
   int getVersionSum() => version;
@@ -115,7 +115,7 @@ KtPair<Packet, String> _parsePacket(String str) {
   } else {
     final lengthType = str[6];
     final lengthBits = lengthType == '0' ? str.substring(7, 22) : str.substring(7, 18);
-    final lengthInt = _parseBinaryString(lengthBits);
+    final lengthInt = parseBinaryString(lengthBits);
 
     final packetSoFar = str.substring(0, 6) + lengthType + lengthBits;
     var remainingString = str.replaceFirst(packetSoFar, '');
@@ -144,7 +144,6 @@ KtPair<Packet, String> _parsePacket(String str) {
   }
 }
 
-int _parseVersion(String str) => _parseBinaryString(str.substring(0, 3));
-int _parseId(String str) => _parseBinaryString(str.substring(3, 6));
-int _parseBinaryString(String str) => int.parse(str, radix: 2);
+int _parseVersion(String str) => parseBinaryString(str.substring(0, 3));
+int _parseId(String str) => parseBinaryString(str.substring(3, 6));
 String _parseHexString(String str) => int.parse(str, radix: 16).toRadixString(2).padLeft(4, '0');

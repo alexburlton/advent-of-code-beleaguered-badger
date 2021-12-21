@@ -11,15 +11,12 @@ class PlainNumber extends SnailfishNumber {
   ExplodeResult? explode(int depth) => null;
 
   @override
-  SnailfishNumber copy() => PlainNumber(value);
-
-  @override
-  SnailfishNumber? split() {
+  SplitResult split() {
     if (value >= 10) {
-      return CompositeNumber(PlainNumber((value/2).floor()), PlainNumber((value/2).ceil()));
+      return SplitResult(true, CompositeNumber(PlainNumber((value/2).floor()), PlainNumber((value/2).ceil())));
     }
 
-    return null;
+    return SplitResult(false, null);
   }
 
   @override

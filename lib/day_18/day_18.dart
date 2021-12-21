@@ -39,10 +39,41 @@ int _findTopLevelCommaIndex(String str) {
 }
 
 void main(List<String> arguments) {
-  final snailfishNumbers = readStringList('day_18/example_input.txt').map(parseSnailfishNumber);
-  final result = snailfishNumbers.reduce<SnailfishNumber>((left, right) => left + right);
-  print(result.toString());
+  partA();
+  partB();
+}
+
+void partA() {
+  final snailfishNumbers = readStringList('day_18/input.txt').map(parseSnailfishNumber).asList();
+  final result = _sumSnailfishNumbers(snailfishNumbers);
+  // print(result.toString());
   print(result.magnitude());
 }
 
+void partB() {
+  final snailfishStrings = readStringList('day_18/input.txt');
+
+  if (snailfishStrings.distinct().size != snailfishStrings.size) {
+    print('This isnt gonna work!');
+  }
+
+  var largestMagnitude = 0;
+  for (var snailfishOne in snailfishStrings.iter) {
+    for (var snailfishTwo in snailfishStrings.iter) {
+       if (snailfishOne == snailfishTwo) {
+         continue;
+       }
+
+       final resultOne = parseSnailfishNumber(snailfishOne) + parseSnailfishNumber(snailfishTwo);
+       final resultTwo = parseSnailfishNumber(snailfishTwo) + parseSnailfishNumber(snailfishOne);
+       largestMagnitude = listOf(largestMagnitude, resultOne.magnitude(), resultTwo.magnitude()).max()!;
+    }
+  }
+
+  print(largestMagnitude);
+}
+
+SnailfishNumber _sumSnailfishNumbers(List<SnailfishNumber> numbers) {
+  return numbers.reduce((left, right) => left + right);
+}
 

@@ -61,4 +61,12 @@ void main() {
 
     expect((left+right).toString(), equals('[[[[0,7],4],[[7,8],[6,0]]],[8,1]]'));
   });
+
+  int _getMagnitude(String snailStr) => parseSnailfishNumber(snailStr).magnitude();
+  test('magnitude', () {
+    expect(_getMagnitude('[[1,2],[[3,4],5]]'), equals(143));
+    expect(_getMagnitude('[[[[0,7],4],[[7,8],[6,0]]],[8,1]]'), equals(1384));
+    expect(_getMagnitude('[[[[1,1],[2,2]],[3,3]],[4,4]]'), equals(445));
+    expect(_getMagnitude('[[[[3,0],[5,3]],[4,4]],[5,5]]'), equals(791));
+  });
 }

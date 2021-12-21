@@ -17,6 +17,7 @@ abstract class SnailfishNumber {
   CompositeNumber? split();
   void addLeft(int value);
   void addRight(int value);
+  int magnitude();
 
   void reduce() {
     var oldStr = toString();
@@ -73,6 +74,9 @@ class PlainNumber extends SnailfishNumber {
   }
 
   @override
+  int magnitude() => value;
+
+  @override
   void addLeft(int value) {
     this.value += value;
   }
@@ -101,6 +105,9 @@ class CompositeNumber extends SnailfishNumber {
   void addRight(int value) {
     right.addRight(value);
   }
+
+  @override
+  int magnitude() => (3 * left.magnitude()) + (2 * right.magnitude());
 
   @override
   CompositeNumber? split() {

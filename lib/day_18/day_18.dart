@@ -1,5 +1,8 @@
 import 'dart:core';
 
+import 'package:beleaguered_badger/utils/utils.dart';
+import 'package:kt_dart/kt.dart';
+
 class ExplodeResult {
   final int? left;
   final int? right;
@@ -33,12 +36,21 @@ abstract class SnailfishNumber {
 
     if (toString() == originalStr) {
       split();
+      if (toString() != originalStr) {
+        print('Split to $this');
+      }
+    } else {
+      print('Exploded to $this');
     }
   }
 
   SnailfishNumber operator +(SnailfishNumber other) {
+    final leftStr = toString();
+    final rightStr = other.toString();
     final result = CompositeNumber(this, other);
     result.reduce();
+
+    print('  $leftStr\n+ $rightStr\n= $result\n\n');
     return result;
   }
 }
@@ -179,8 +191,9 @@ int _findTopLevelCommaIndex(String str) {
 }
 
 void main(List<String> arguments) {
-  final snailfishNumber = parseSnailfishNumber('[[[[[9,8],1],2],3],4]');
-  print(snailfishNumber.toString());
+  final snailfishNumbers = readStringList('day_18/example_input.txt').map(parseSnailfishNumber);
+  final result = snailfishNumbers.reduce<SnailfishNumber>((left, right) => left + right);
+  print(result.toString());
 }
 
 

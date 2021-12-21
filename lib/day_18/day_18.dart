@@ -11,8 +11,36 @@ class ExplodeResult {
 
 abstract class SnailfishNumber {
   ExplodeResult? explode(int depth);
+  CompositeNumber? split();
   void addLeft(int value);
   void addRight(int value);
+
+  void reduce() {
+    var oldStr = toString();
+    _applySingleReduction();
+    var newStr = toString();
+
+    while (newStr != oldStr) {
+      oldStr = newStr;
+      _applySingleReduction();
+      newStr = toString();
+    }
+  }
+
+  void _applySingleReduction() {
+    final originalStr = toString();
+    explode(0);
+
+    if (toString() == originalStr) {
+      split();
+    }
+  }
+
+  SnailfishNumber operator +(SnailfishNumber other) {
+    final result = CompositeNumber(this, other);
+    result.reduce();
+    return result;
+  }
 }
 
 class PlainNumber extends SnailfishNumber {
@@ -22,6 +50,15 @@ class PlainNumber extends SnailfishNumber {
 
   @override
   ExplodeResult? explode(int depth) => null;
+
+  @override
+  CompositeNumber? split() {
+    if (value >= 10) {
+      return CompositeNumber(PlainNumber((value/2).floor()), PlainNumber((value/2).ceil()));
+    }
+
+    return null;
+  }
 
   @override
   void addLeft(int value) {
@@ -51,6 +88,23 @@ class CompositeNumber extends SnailfishNumber {
   @override
   void addRight(int value) {
     right.addRight(value);
+  }
+
+  @override
+  CompositeNumber? split() {
+    final leftResult = left.split();
+    if (leftResult != null) {
+      left = leftResult;
+      return null;
+    }
+
+    final rightResult = right.split();
+    if (rightResult != null) {
+      right = rightResult;
+      return null;
+    }
+
+    return null;
   }
 
   @override

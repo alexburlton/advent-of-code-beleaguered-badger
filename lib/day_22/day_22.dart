@@ -1,35 +1,30 @@
 import 'dart:core';
-import 'package:beleaguered_badger/utils/point3d.dart';
+import 'dart:math';
 import 'package:beleaguered_badger/utils/utils.dart';
 import 'package:kt_dart/kt.dart';
 
 class ReactorState {
-  KtMap<Point3d, bool> cubeStates;
+  KtMutableList<Cube> regions = KtMutableList.empty();
 
-  ReactorState(this.cubeStates);
+  void applyInstruction(Cube region) {
+    // Cancel out all existing overlaps to a total volume of 0.
+    final cubesToAdd = regions.mapNotNull((existingRegion) => existingRegion.intersect(region)).map((value) => value!);
+    regions.addAll(cubesToAdd);
 
-  void applyInstruction(ReactorInstruction instruction) {
-    print('Processing $instruction');
-    final pointsToApply = instruction.getPoints().filter(_withinTargetRegion).toSet();
-    print('Filtered to ${pointsToApply.size} points');
-    cubeStates = cubeStates.mapValues((entry) {
-      if (pointsToApply.contains(entry.key)) {
-        return instruction.on;
-      }
-
-      return entry.value;
-    });
-
-
-    print('Mapped values');
+    // Add our full cube if the instruction was "ON"
+    if (region.on) {
+      regions.add(region);
+    }
   }
 
-  int getOnCount() => cubeStates.values.count((value) => value);
+  int getOnCount() => regions.fold(0, (total, region) => total + region.getSignedVolume());
 }
 
-class ReactorInstruction {
-  final bool on;
 
+final targetRegion = Cube(false, -50, 50, -50, 50, -50, 50);
+
+class Cube {
+  final bool on;
   final int xMin;
   final int xMax;
   final int yMin;
@@ -37,29 +32,33 @@ class ReactorInstruction {
   final int zMin;
   final int zMax;
 
-  const ReactorInstruction(this.on, this.xMin, this.xMax, this.yMin, this.yMax, this.zMin, this.zMax);
-
-  KtSet<Point3d> getPoints() {
-    final xValues = makeInclusiveList(xMin, xMax);
-    final yValues = makeInclusiveList(yMin, yMax);
-    final zValues = makeInclusiveList(zMin, zMax);
-
-    return xValues.flatMap((x) => yValues.flatMap((y) => zValues.map((z) => Point3d(x, y, z)))).toSet();
-  }
+  const Cube(this.on, this.xMin, this.xMax, this.yMin, this.yMax, this.zMin, this.zMax);
 
   @override
   String toString() {
     return "$xMin<=x<=$xMax  $yMin<=y<=$yMax  $zMin<=z<=$zMax";
   }
 
-  bool withinTargetRegion() {
-    return xMin <= 50 && xMax >= -50 && yMin <= 50 && yMax >= -50 && zMin <= 50 && zMax >= -50;
+  int getSignedVolume() => on ? getVolume() : -getVolume();
+  int getVolume() => (xMax-xMin + 1).abs() * (yMax-yMin + 1).abs() * (zMax - zMin + 1).abs();
+
+  bool isSane() => xMin <= xMax && yMin <= yMax && zMin <= zMax;
+
+  Cube? intersect(Cube other) {
+    final newRegion = Cube(!on,
+        max(xMin, other.xMin), min(xMax, other.xMax),
+        max(yMin, other.yMin), min(yMax, other.yMax),
+        max(zMin, other.zMin), min(zMax, other.zMax));
+
+    return newRegion.isSane() ? newRegion : null;
   }
+
+  bool withinTargetRegion() => intersect(targetRegion) != null;
 }
 
-final input = readStringList('day_22/input.txt').map(_parseInput);
+final input = readStringList('day_22/input.txt').map(parseRegion);
 
-ReactorInstruction _parseInput(String input) {
+Cube parseRegion(String input) {
   final instructionAndCoords = input.split(' ');
   final on = instructionAndCoords[0] == 'on';
 
@@ -68,32 +67,26 @@ ReactorInstruction _parseInput(String input) {
   final yMinAndMax = coords[1].substring(2).split('..').map((str) => int.parse(str)).toList();
   final zMinAndMax = coords[2].substring(2).split('..').map((str) => int.parse(str)).toList();
 
-  return ReactorInstruction(on, xMinAndMax[0], xMinAndMax[1], yMinAndMax[0], yMinAndMax[1], zMinAndMax[0], zMinAndMax[1]);
-}
-
-bool _withinTargetRegion(Point3d point) {
-  return point.x <= 50 && point.x >= -50 && point.y <= 50 && point.y >= -50 && point.z <= 50 && point.z >= -50;
+  return Cube(on, xMinAndMax[0], xMinAndMax[1], yMinAndMax[0], yMinAndMax[1], zMinAndMax[0], zMinAndMax[1]);
 }
 
 void main(List<String> arguments) {
-  print('parsed input');
   partA();
   partB();
 }
 
 void partA() {
   final filteredInstructions = input.filter((instruction) => instruction.withinTargetRegion());
-  final allPoints = filteredInstructions.flatMap((instruction) => instruction.getPoints()).distinct();
-  final pointMap = allPoints.associateWith((p0) => false);
-  print(pointMap.size);
-  final state = ReactorState(pointMap);
-
-  for (var instruction in filteredInstructions.iter) {
-    state.applyInstruction(instruction);
-  }
-
-  print(state.getOnCount());
+  _applyInstructions(filteredInstructions);
 }
 
 void partB() {
+  _applyInstructions(input);
+}
+
+void _applyInstructions(KtList<Cube> instructions) {
+  final state = ReactorState();
+  instructions.forEach(state.applyInstruction);
+
+  print(state.getOnCount());
 }

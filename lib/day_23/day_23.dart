@@ -1,11 +1,7 @@
 import 'dart:core';
-import 'dart:math';
 import 'package:beleaguered_badger/utils/point2d.dart';
 import 'package:beleaguered_badger/utils/utils.dart';
 import 'package:kt_dart/kt.dart';
-
-final input = readStringGrid('day_23/input.txt');
-final memo = mutableMapFrom<String, int>();
 
 final _amphipodCosts = {
   'A': 1,
@@ -21,7 +17,7 @@ class BurrowState {
   final int energyExpended;
   final Amphipod? movingAmphipod;
 
-  const BurrowState(this.amphipods, this.map, this.rooms, this.energyExpended, this.movingAmphipod);
+  const BurrowState(this.amphipods, this.map, this.rooms, this.energyExpended, [this.movingAmphipod]);
 
   BurrowState makeMove(Move move) {
     final movingAmphipod = move.amphipod;
@@ -195,7 +191,7 @@ class Room {
 BurrowState parseBurrowState(KtMap<Point2d, String> rawInput) {
   final map = rawInput.mapValues((entry) => entry.value == '#' ? '#' : '.');
   final amphipods = _parseAmphipods(rawInput);
-  final rooms = _makeRooms();
+  final rooms = _makeRooms(rawInput.yMax() - rawInput.yMin());
 
   return BurrowState(amphipods, map, rooms, 0, null);
 }
@@ -205,16 +201,17 @@ KtList<Amphipod> _parseAmphipods(KtMap<Point2d, String> rawInput) {
   return amphipodPoints.map((entry) => Amphipod(entry.value, entry.key, null));
 }
 
-KtList<Room> _makeRooms() {
-  final roomA = _parseRoom(0, "A");
-  final roomB = _parseRoom(2, "B");
-  final roomC = _parseRoom(4, "C");
-  final roomD = _parseRoom(6, "D");
+KtList<Room> _makeRooms(int burrowHeight) {
+  final roomA = _parseRoom(0, burrowHeight, "A");
+  final roomB = _parseRoom(2, burrowHeight, "B");
+  final roomC = _parseRoom(4, burrowHeight, "C");
+  final roomD = _parseRoom(6, burrowHeight, "D");
 
   return listOf(roomA, roomB, roomC, roomD);
 }
-Room _parseRoom(int offset, String type) {
-  final points = listOf(Point2d(3+offset, 2), Point2d(3+offset, 3));
+Room _parseRoom(int offset, int burrowHeight, String type) {
+  final yValues = makeInclusiveList(2, burrowHeight-1);
+  final points = yValues.map((y) => Point2d(3+offset, y));
   final topPoint = Point2d(3+offset, 1);
   return Room(points, type, topPoint);
 }
@@ -224,25 +221,28 @@ void main(List<String> arguments) {
   partB();
 }
 
+final inputFile = 'example_input';
 void partA() {
+  final memo = mutableMapFrom<String, int>();
+  final input = readStringGrid('day_23/$inputFile.txt');
   final burrowState = parseBurrowState(input);
-  print(burrowState.hashString());
+  print(burrowState.rooms);
+  _solveBurrowState(burrowState, memo);
+}
 
-  burrowState.prettyPrint();
+void partB() {
+  final memo = mutableMapFrom<String, int>();
+  final input = readStringGrid('day_23/${inputFile}_b.txt');
+  final burrowState = parseBurrowState(input);
+  print(burrowState.rooms);
+  _solveBurrowState(burrowState, memo);
+}
 
-  final moves = burrowState.getPossibleMoves();
-  print(moves);
-
+void _solveBurrowState(BurrowState burrowState, KtMutableMap<String, int> memoToUse) {
   int currentBest = 0x7fffffffffffffff;
   KtList<BurrowState> states = burrowState.getPossibleMoves().map((move) => burrowState.makeMove(move));
 
   while (!states.isEmpty()) {
-    // print(states.size);
-    // print('*** AFTER $i MOVES ***');
-    // for (var state in states.iter) {
-    //   state.prettyPrint();
-    // }
-
     final finished = states.filter((state) => state.isCompleted());
     if (!finished.isEmpty()) {
       currentBest = finished.minBy((state) => state.energyExpended)!.energyExpended;
@@ -252,29 +252,23 @@ void partA() {
     final pendingStates = states.filter((state) => !state.isCompleted());
     final newStates = pendingStates.flatMap((state) => state.getPossibleMoves().map((move) => state.makeMove(move)));
     states = newStates.filterNot((state) => state.energyExpended > currentBest);
-    states = _collapseStates(states);
+    states = _collapseStates(states, memoToUse);
   }
 
   print(currentBest);
 }
 
-KtList<BurrowState> _collapseStates(KtList<BurrowState> states) {
+KtList<BurrowState> _collapseStates(KtList<BurrowState> states, KtMutableMap<String, int> memoToUse) {
   final grouped = states.groupBy((state) => state.hashString());
   final bestForSituation = grouped.mapValues((entry) => entry.value.minBy((state) => state.energyExpended)!);
-  final filteredBests = bestForSituation.filterNot((entry) => memo[entry.key] != null && memo[entry.key]! < entry.value.energyExpended);
-  _updateMemo(filteredBests);
+  final filteredBests = bestForSituation.filterNot((entry) => memoToUse[entry.key] != null && memoToUse[entry.key]! < entry.value.energyExpended);
+  _updateMemo(filteredBests, memoToUse);
+
   print('Collapsed ${states.size} to ${filteredBests.size}');
   return filteredBests.values.toList();
 }
 
-void _updateMemo(KtMap<String, BurrowState> bestsSoFar) {
-  for (var entry in bestsSoFar.iter) {
-    final currentValue = memo[entry.key];
-    final newValue = currentValue == null ? entry.value.energyExpended : min(currentValue, entry.value.energyExpended);
-    memo[entry.key] = newValue;
-  }
-}
-
-void partB() {
-
+void _updateMemo(KtMap<String, BurrowState> bestsSoFar, KtMutableMap<String, int> memoToUse) {
+  final bestEnergies = bestsSoFar.mapValues((entry) => entry.value.energyExpended);
+  memoToUse.putAll(bestEnergies);
 }

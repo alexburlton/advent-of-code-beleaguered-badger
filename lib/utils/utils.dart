@@ -95,10 +95,10 @@ extension GridUtils2d<T> on KtMap<Point2d, T> {
     return neighbourPts.mapNotNull<T?>((pt) => this[pt]).map((value) => value!);
   }
 
-  num xMin() => keys.map((pt) => pt.x).min()!;
-  num xMax() => keys.map((pt) => pt.x).max()!;
-  num yMin() => keys.map((pt) => pt.y).min()!;
-  num yMax() => keys.map((pt) => pt.y).max()!;
+  int xMin() => keys.map((pt) => pt.x).min()!;
+  int xMax() => keys.map((pt) => pt.x).max()!;
+  int yMin() => keys.map((pt) => pt.y).min()!;
+  int yMax() => keys.map((pt) => pt.y).max()!;
 
   String getGridString() {
     var str = "";

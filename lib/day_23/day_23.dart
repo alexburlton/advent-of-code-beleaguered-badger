@@ -40,12 +40,13 @@ class BurrowState {
       return getPossibleMovesForAmphipod(movingAmphipod!);
     }
 
-    final amphipodInRangeOfRoom = amphipods.firstOrNull((amphipod) => canReachRoom(amphipod) && !isInDesiredRoom(amphipod));
+    final movableAmphipods = amphipods.filterNot(shouldStayStill);
+    final amphipodInRangeOfRoom = movableAmphipods.firstOrNull((amphipod) => canReachRoom(amphipod));
     if (amphipodInRangeOfRoom != null) {
       return getPossibleMovesForAmphipod(amphipodInRangeOfRoom);
     }
 
-    return amphipods.flatMap(getPossibleMovesForAmphipod);
+    return movableAmphipods.flatMap(getPossibleMovesForAmphipod);
   }
 
   KtList<Move> getPossibleMovesForAmphipod(Amphipod amphipod) {
@@ -60,7 +61,8 @@ class BurrowState {
     final allowedSpaces = emptySpaces.filterNot((pt) => amphipod.position.y == 1 && isUnenterableRoom(amphipod, pt));
 
     // Doesn't make sense for the moving amphipod to go back on itself ever
-    return allowedSpaces.map((pt) => Move(amphipod, pt));
+    final sensibleSpaces = allowedSpaces.filterNot((pt) => amphipod == movingAmphipod && pt == amphipod.prevPosition);
+    return sensibleSpaces.map((pt) => Move(amphipod, pt));
   }
 
   KtList<Point2d> getNeighbouringEmptySpaces(Point2d pt) {
@@ -110,6 +112,22 @@ class BurrowState {
     }
 
     return points;
+  }
+
+  bool shouldStayStill(Amphipod amphipod) {
+    if (!isInDesiredRoom(amphipod)) {
+      return false;
+    }
+
+    final room = getDesiredRoom(amphipod);
+    final allOccupants = getOccupants(room);
+
+    final otherRoomPoints = room.points - listOf(amphipod.position);
+    return otherRoomPoints.none((roomSpace) {
+      final occupant = allOccupants.firstOrNull((occupant) => occupant.position == roomSpace);
+      return roomSpace.y > amphipod.position.y
+          && occupant?.type != amphipod.type;
+    });
   }
 
   bool isCompleted() {

@@ -24,7 +24,7 @@ class BurrowState {
   BurrowState makeMove(Move move) {
     final movingAmphipod = move.amphipod;
     final otherAmphipods = amphipods.filterNot((amphipod) => amphipod == movingAmphipod);
-    final updatedAmphipod = Amphipod(movingAmphipod.type, move.newPosition, movingAmphipod.position);
+    final updatedAmphipod = Amphipod(movingAmphipod.type, move.newPosition);
 
     final newAmphipods = otherAmphipods + listOf(updatedAmphipod);
     final updatedEnergy = energyExpended + (move.distance * _amphipodCosts.getValue(movingAmphipod.type));
@@ -164,9 +164,8 @@ class BurrowState {
 class Amphipod {
   final Point2d position;
   final String type;
-  final Point2d? prevPosition;
 
-  const Amphipod(this.type, this.position, this.prevPosition);
+  const Amphipod(this.type, this.position);
 
   @override
   String toString() => "Amphipod $type: $position";
@@ -207,7 +206,7 @@ BurrowState parseBurrowState(KtMap<Point2d, String> rawInput) {
 
 KtList<Amphipod> _parseAmphipods(KtMap<Point2d, String> rawInput) {
   final amphipodPoints = rawInput.filterValues((value) => _amphipodCosts.keys.contains(value));
-  return amphipodPoints.map((entry) => Amphipod(entry.value, entry.key, null));
+  return amphipodPoints.map((entry) => Amphipod(entry.value, entry.key));
 }
 
 KtList<Room> _makeRooms(int burrowHeight) {

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:beleaguered_badger/utils/point2d.dart';
 import 'package:kt_dart/kt.dart';
 import 'package:collection/collection.dart';
 
@@ -68,7 +69,7 @@ KtList<String> readDoubleSpacedList(String filename) {
 }
 
 String _noOp(String original) => original;
-KtMap<Point, String> readStringGrid(String filename) => parseTextGrid<String>(readStringList(filename), _noOp);
+KtMap<Point2d, String> readStringGrid(String filename) => parseTextGrid<String>(readStringList(filename), _noOp).mapKeys((entry) => Point2d(entry.key.x.toInt(), entry.key.y.toInt()));
 
 KtMap<Point, int> readIntegerGrid(String filename) => parseIntegerGrid(readStringList(filename));
 KtMap<Point, int> parseIntegerGrid(KtList<String> list, [int Function(String) parser=int.parse]) {
@@ -88,6 +89,42 @@ KtMap<Point, T> parseTextGrid<T>(KtList<String> list, T Function(String) parser)
   return map.toMap();
 }
 
+extension GridUtils2d<T> on KtMap<Point2d, T> {
+  KtList<T> getNeighbourValues(Point2d pt) {
+    final neighbourPts = getNeighbourPoints2d(pt);
+    return neighbourPts.mapNotNull<T?>((pt) => this[pt]).map((value) => value!);
+  }
+
+  num xMin() => keys.map((pt) => pt.x).min()!;
+  num xMax() => keys.map((pt) => pt.x).max()!;
+  num yMin() => keys.map((pt) => pt.y).min()!;
+  num yMax() => keys.map((pt) => pt.y).max()!;
+
+  String getGridString() {
+    var str = "";
+    final xValues = keys.map((pt) => pt.x);
+    final yValues = keys.map((pt) => pt.y);
+
+    for (var y=yValues.min()!; y<=yValues.max()!; y++) {
+      if (str.isNotEmpty) {
+        str += '\n';
+      }
+
+      var line = "";
+      for (var x=xValues.min()!; x<=xValues.max()!; x++) {
+        line += getValue(Point2d(x, y)).toString();
+      }
+
+      str += line;
+    }
+
+    return str;
+  }
+  void printGrid() {
+    print(getGridString());
+  }
+}
+
 extension MoreGridUtils<T> on KtMap<Point, T> {
   KtList<T> getNeighbourValues(Point pt) {
     final neighbourPts = getNeighbourPoints(pt);
@@ -99,18 +136,28 @@ extension MoreGridUtils<T> on KtMap<Point, T> {
   num yMin() => keys.map((pt) => pt.y).min()!;
   num yMax() => keys.map((pt) => pt.y).max()!;
 
-  void printGrid() {
+  String getGridString() {
+    var str = "";
     final xValues = keys.map((pt) => pt.x);
     final yValues = keys.map((pt) => pt.y);
 
     for (var y=yValues.min()!; y<=yValues.max()!; y++) {
+      if (str.isNotEmpty) {
+        str += '\n';
+      }
+
       var line = "";
       for (var x=xValues.min()!; x<=xValues.max()!; x++) {
         line += getValue(Point(x, y)).toString();
       }
 
-      print(line);
+      str += line;
     }
+
+    return str;
+  }
+  void printGrid() {
+    print(getGridString());
   }
 }
 
@@ -127,6 +174,9 @@ extension CountMapUtils<K, V> on KtMutableMap<K, int> {
     this[key] = currentCount + amount;
   }
 }
+
+KtList<Point2d> getNeighbourPoints2d(Point2d pt) =>
+    [Point2d(pt.x, pt.y-1), Point2d(pt.x, pt.y+1), Point2d(pt.x+1, pt.y), Point2d(pt.x-1, pt.y)].toKtList();
 
 KtList<Point> getNeighbourPoints(Point pt) =>
   [Point(pt.x, pt.y-1), Point(pt.x, pt.y+1), Point(pt.x+1, pt.y), Point(pt.x-1, pt.y)].toKtList();

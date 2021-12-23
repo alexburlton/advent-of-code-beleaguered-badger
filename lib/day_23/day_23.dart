@@ -1,9 +1,11 @@
 import 'dart:core';
 import 'dart:math';
+import 'package:beleaguered_badger/utils/point2d.dart';
 import 'package:beleaguered_badger/utils/utils.dart';
 import 'package:kt_dart/kt.dart';
 
-final input = readStringGrid('day_23/example_input.txt');
+final input = readStringGrid('day_23/input.txt');
+final memo = mutableMapFrom<String, int>();
 
 final _amphipodCosts = {
   'A': 1,
@@ -14,17 +16,12 @@ final _amphipodCosts = {
 
 class BurrowState {
   final KtList<Amphipod> amphipods;
-  final KtMap<Point, String> map;
+  final KtMap<Point2d, String> map;
   final KtList<Room> rooms;
   final int energyExpended;
   final Amphipod? movingAmphipod;
 
   const BurrowState(this.amphipods, this.map, this.rooms, this.energyExpended, this.movingAmphipod);
-
-  String hashString() {
-    final sortedAmphipods = amphipods.sortedBy((a) => a.position.x + (100 * a.position.y));
-    return "$sortedAmphipods, $movingAmphipod";
-  }
 
   BurrowState makeMove(Move move) {
     final movingAmphipod = move.amphipod;
@@ -43,7 +40,7 @@ class BurrowState {
       return getPossibleMovesForAmphipod(movingAmphipod!);
     }
 
-    final amphipodInRangeOfRoom = amphipods.firstOrNull(canReachRoom);
+    final amphipodInRangeOfRoom = amphipods.firstOrNull((amphipod) => canReachRoom(amphipod) && !isInDesiredRoom(amphipod));
     if (amphipodInRangeOfRoom != null) {
       return getPossibleMovesForAmphipod(amphipodInRangeOfRoom);
     }
@@ -60,21 +57,20 @@ class BurrowState {
     final emptySpaces = getNeighbouringEmptySpaces(amphipod.position);
 
     // Amphipods will never move from the hallway into a room unless that room is their destination room and that room contains no amphipods which do not also have that room as their own destination
-    final allowedSpaces = emptySpaces.filterNot((pt) => isUnenterableRoom(amphipod, pt));
+    final allowedSpaces = emptySpaces.filterNot((pt) => amphipod.position.y == 1 && isUnenterableRoom(amphipod, pt));
 
     // Doesn't make sense for the moving amphipod to go back on itself ever
-    final sensibleSpaces = allowedSpaces.filterNot((pt) => amphipod == movingAmphipod && pt == amphipod.prevPosition);
-    return sensibleSpaces.map((pt) => Move(amphipod, pt));
+    return allowedSpaces.map((pt) => Move(amphipod, pt));
   }
 
-  KtList<Point> getNeighbouringEmptySpaces(Point pt) {
-    final neighbours = getNeighbourPoints(pt);
+  KtList<Point2d> getNeighbouringEmptySpaces(Point2d pt) {
+    final neighbours = getNeighbourPoints2d(pt);
     final nonWalls = neighbours.filter((pt) => map[pt] == '.');
     final occupiedSpaces = amphipods.map((amphipod) => amphipod.position);
     return nonWalls.filter((pt) => !occupiedSpaces.contains(pt));
   }
 
-  bool isUnenterableRoom(Amphipod amphipod, Point pt) {
+  bool isUnenterableRoom(Amphipod amphipod, Point2d pt) {
     final room = rooms.firstOrNull((room) => room.points.contains(pt));
     if (room == null) {
       return false;
@@ -96,47 +92,60 @@ class BurrowState {
   bool canReachRoom(Amphipod amphipod) {
     final desiredRoom = getDesiredRoom(amphipod);
     final reachablePoints = getAllReachablePoints(amphipod);
+    // print('Trying to get to $desiredRoom, reachable points apparently $reachablePoints');
     return desiredRoom.points.any((roomPt) => reachablePoints.contains(roomPt)) && canEnterRoom(amphipod, desiredRoom);
   }
 
-  KtList<Point> getAllReachablePoints(Amphipod amphipod) {
+  KtList<Point2d> getAllReachablePoints(Amphipod amphipod) {
     var points = getNeighbouringEmptySpaces(amphipod.position);
     if (points.isEmpty()) {
       return emptyList();
     }
 
     var prevPoints = points;
-    points = points.flatMap((pt) => getNeighbouringEmptySpaces(pt)).distinct();
+    points = (points + points.flatMap((pt) => getNeighbouringEmptySpaces(pt))).distinct();
     while (points.size > prevPoints.size) {
       prevPoints = points;
-      points = points.flatMap((pt) => getNeighbouringEmptySpaces(pt)).distinct();
+      points = (points + points.flatMap((pt) => getNeighbouringEmptySpaces(pt))).distinct();
     }
 
     return points;
   }
 
   bool isCompleted() {
-    return amphipods.all((amphipod) {
-      final desiredRoom = getDesiredRoom(amphipod);
-      return desiredRoom.points.contains(amphipod.position);
-    });
+    return amphipods.all(isInDesiredRoom);
+  }
+
+  bool isInDesiredRoom(Amphipod amphipod) {
+    final desiredRoom = getDesiredRoom(amphipod);
+    return desiredRoom.points.contains(amphipod.position);
   }
 
   Room getDesiredRoom(Amphipod amphipod) {
     return rooms.first((room) => room.type == amphipod.type);
   }
 
+  String hashString() {
+    final newMap = map.toMutableMap();
+    for (var amphipod in amphipods.iter) {
+      newMap[amphipod.position] = amphipod.type;
+    }
+
+    return newMap.getGridString();
+  }
+
   void prettyPrint() {
-    map.printGrid();
-    print(amphipods);
-    print(rooms);
+    print('\n');
+    print('Energy: $energyExpended');
+    print(hashString());
+    print('\n');
   }
 }
 
 class Amphipod {
-  final Point position;
+  final Point2d position;
   final String type;
-  final Point? prevPosition;
+  final Point2d? prevPosition;
 
   const Amphipod(this.type, this.position, this.prevPosition);
 
@@ -146,7 +155,7 @@ class Amphipod {
 
 class Move {
   final Amphipod amphipod;
-  final Point newPosition;
+  final Point2d newPosition;
 
   const Move(this.amphipod, this.newPosition);
 
@@ -155,9 +164,9 @@ class Move {
 }
 
 class Room {
-  final KtList<Point> points;
+  final KtList<Point2d> points;
   final String type;
-  final Point outsideSpace;
+  final Point2d outsideSpace;
 
   const Room(this.points, this.type, this.outsideSpace);
 
@@ -165,34 +174,31 @@ class Room {
   String toString() => "Room $type: $points, outside space $outsideSpace";
 }
 
-BurrowState parseBurrowState(KtMap<Point, String> rawInput) {
+BurrowState parseBurrowState(KtMap<Point2d, String> rawInput) {
   final map = rawInput.mapValues((entry) => entry.value == '#' ? '#' : '.');
   final amphipods = _parseAmphipods(rawInput);
-  final rooms = _parseRooms(rawInput);
+  final rooms = _makeRooms();
 
   return BurrowState(amphipods, map, rooms, 0, null);
 }
 
-KtList<Amphipod> _parseAmphipods(KtMap<Point, String> rawInput) {
+KtList<Amphipod> _parseAmphipods(KtMap<Point2d, String> rawInput) {
   final amphipodPoints = rawInput.filterValues((value) => _amphipodCosts.keys.contains(value));
   return amphipodPoints.map((entry) => Amphipod(entry.value, entry.key, null));
 }
 
-KtList<Room> _parseRooms(KtMap<Point, String> rawInput) {
-  final amphipodPoints = rawInput.filterValues((value) => _amphipodCosts.keys.contains(value));
-  final sortedPoints = amphipodPoints.keys.sortedBy((pt) => pt.x);
-
-  final roomA = _parseRoom(sortedPoints, 0, "A");
-  final roomB = _parseRoom(sortedPoints, 2, "B");
-  final roomC = _parseRoom(sortedPoints, 4, "C");
-  final roomD = _parseRoom(sortedPoints, 6, "D");
+KtList<Room> _makeRooms() {
+  final roomA = _parseRoom(0, "A");
+  final roomB = _parseRoom(2, "B");
+  final roomC = _parseRoom(4, "C");
+  final roomD = _parseRoom(6, "D");
 
   return listOf(roomA, roomB, roomC, roomD);
 }
-Room _parseRoom(KtList<Point> sortedPoints, int offset, String type) {
-  final points = sortedPoints.subList(offset, offset + 2);
-  final topPoint = points.minBy((pt) => pt.y)!;
-  return Room(points, type, Point(topPoint.x, topPoint.y - 1));
+Room _parseRoom(int offset, String type) {
+  final points = listOf(Point2d(3+offset, 2), Point2d(3+offset, 3));
+  final topPoint = Point2d(3+offset, 1);
+  return Room(points, type, topPoint);
 }
 
 void main(List<String> arguments) {
@@ -202,6 +208,8 @@ void main(List<String> arguments) {
 
 void partA() {
   final burrowState = parseBurrowState(input);
+  print(burrowState.hashString());
+
   burrowState.prettyPrint();
 
   final moves = burrowState.getPossibleMoves();
@@ -211,7 +219,12 @@ void partA() {
   KtList<BurrowState> states = burrowState.getPossibleMoves().map((move) => burrowState.makeMove(move));
 
   while (!states.isEmpty()) {
-    print(states.size);
+    // print(states.size);
+    // print('*** AFTER $i MOVES ***');
+    // for (var state in states.iter) {
+    //   state.prettyPrint();
+    // }
+
     final finished = states.filter((state) => state.isCompleted());
     if (!finished.isEmpty()) {
       currentBest = finished.minBy((state) => state.energyExpended)!.energyExpended;
@@ -229,7 +242,19 @@ void partA() {
 
 KtList<BurrowState> _collapseStates(KtList<BurrowState> states) {
   final grouped = states.groupBy((state) => state.hashString());
-  return grouped.values.map((states) => states.minBy((state) => state.energyExpended)!);
+  final bestForSituation = grouped.mapValues((entry) => entry.value.minBy((state) => state.energyExpended)!);
+  final filteredBests = bestForSituation.filterNot((entry) => memo[entry.key] != null && memo[entry.key]! < entry.value.energyExpended);
+  _updateMemo(filteredBests);
+  print('Collapsed ${states.size} to ${filteredBests.size}');
+  return filteredBests.values.toList();
+}
+
+void _updateMemo(KtMap<String, BurrowState> bestsSoFar) {
+  for (var entry in bestsSoFar.iter) {
+    final currentValue = memo[entry.key];
+    final newValue = currentValue == null ? entry.value.energyExpended : min(currentValue, entry.value.energyExpended);
+    memo[entry.key] = newValue;
+  }
 }
 
 void partB() {

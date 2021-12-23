@@ -15,9 +15,11 @@ class BurrowState {
   final KtMap<Point2d, String> map;
   final KtList<Room> rooms;
   final int energyExpended;
+  final KtSet<Point2d> corridorPoints;
+  final KtSet<Point2d> aboveRoomPoints;
   final Amphipod? movingAmphipod;
 
-  const BurrowState(this.amphipods, this.map, this.rooms, this.energyExpended, [this.movingAmphipod]);
+  const BurrowState(this.amphipods, this.map, this.rooms, this.energyExpended, this.corridorPoints, this.aboveRoomPoints, [this.movingAmphipod]);
 
   BurrowState makeMove(Move move) {
     final movingAmphipod = move.amphipod;
@@ -25,13 +27,12 @@ class BurrowState {
     final updatedAmphipod = Amphipod(movingAmphipod.type, move.newPosition, movingAmphipod.position);
 
     final newAmphipods = otherAmphipods + listOf(updatedAmphipod);
-    final updatedEnergy = energyExpended + _amphipodCosts.getValue(movingAmphipod.type);
+    final updatedEnergy = energyExpended + (move.distance * _amphipodCosts.getValue(movingAmphipod.type));
 
-    return BurrowState(newAmphipods, map, rooms, updatedEnergy, updatedAmphipod);
+    return BurrowState(newAmphipods, map, rooms, updatedEnergy, corridorPoints, aboveRoomPoints, updatedAmphipod);
   }
 
   KtList<Move> getPossibleMoves() {
-    // Amphipods will never stop on the space immediately outside any room
     if (rooms.any((room) => movingAmphipod?.position == room.outsideSpace)) {
       return getPossibleMovesForAmphipod(movingAmphipod!);
     }
@@ -47,18 +48,21 @@ class BurrowState {
 
   KtList<Move> getPossibleMovesForAmphipod(Amphipod amphipod) {
     // Once an amphipod stops moving in the hallway, it will stay in that spot until it can move into a room
-    if (amphipod != movingAmphipod && amphipod.position.y == 1 && !canReachRoom(amphipod)) {
+    bool goToRoom = canReachRoom(amphipod);
+    if (amphipod.position.y == 1 && !goToRoom) {
       return emptyList();
     }
 
-    final emptySpaces = getNeighbouringEmptySpaces(amphipod.position);
+    // If you can go to the room, do.
+    final possibleMoves = getAllReachablePoints(amphipod);
+    if (goToRoom) {
+      final desiredRoom = getDesiredRoom(amphipod);
+      final pos = getVacantPosition(desiredRoom);
+      return listOf(possibleMoves.first((move) => move.newPosition == pos));
+    }
 
-    // Amphipods will never move from the hallway into a room unless that room is their destination room and that room contains no amphipods which do not also have that room as their own destination
-    final allowedSpaces = emptySpaces.filterNot((pt) => amphipod.position.y == 1 && isUnenterableRoom(amphipod, pt));
-
-    // Doesn't make sense for the moving amphipod to go back on itself ever
-    final sensibleSpaces = allowedSpaces.filterNot((pt) => amphipod == movingAmphipod && pt == amphipod.prevPosition);
-    return sensibleSpaces.map((pt) => Move(amphipod, pt));
+    // Else, we're in a room, so we just want the possible corridor positions
+    return possibleMoves.filter((move) => corridorPoints.contains(move.newPosition));
   }
 
   KtList<Point2d> getNeighbouringEmptySpaces(Point2d pt) {
@@ -89,29 +93,34 @@ class BurrowState {
 
   bool canReachRoom(Amphipod amphipod) {
     final desiredRoom = getDesiredRoom(amphipod);
-    final reachablePoints = getAllReachablePoints(amphipod);
-    // print('Trying to get to $desiredRoom, reachable points apparently $reachablePoints');
+    final reachablePoints = getAllReachablePoints(amphipod).map((move) => move.newPosition);
     return desiredRoom.points.any((roomPt) => reachablePoints.contains(roomPt)) && canEnterRoom(amphipod, desiredRoom);
   }
 
-  KtList<Point2d> getAllReachablePoints(Amphipod amphipod) {
-    var points = getNeighbouringEmptySpaces(amphipod.position);
+  KtList<Move> getAllReachablePoints(Amphipod amphipod) {
+    final points = getNeighbouringEmptySpaces(amphipod.position);
     if (points.isEmpty()) {
       return emptyList();
     }
 
-    var prevPoints = points;
-    points = (points + points.flatMap((pt) => getNeighbouringEmptySpaces(pt))).distinct();
-    while (points.size > prevPoints.size) {
-      prevPoints = points;
-      points = (points + points.flatMap((pt) => getNeighbouringEmptySpaces(pt))).distinct();
+    var distance = 1;
+    var moves = points.map((pt) => Move(amphipod, pt, distance));
+    var prevMoves = emptyList();
+    while (moves.size > prevMoves.size) {
+      distance++;
+      prevMoves = moves;
+
+      final oldPoints = moves.map((move) => move.newPosition);
+      final newPoints = (oldPoints.flatMap((pt) => getNeighbouringEmptySpaces(pt)) - oldPoints).distinct();
+      moves = moves + newPoints.map((pt) => Move(amphipod, pt, distance));
     }
 
-    return points;
+    return moves;
   }
 
   bool shouldStayStill(Amphipod amphipod) {
-    if (!isInDesiredRoom(amphipod)) {
+    final desiredRoom = getDesiredRoom(amphipod);
+    if (!desiredRoom.points.contains(amphipod.position)) {
       return false;
     }
 
@@ -127,25 +136,21 @@ class BurrowState {
   }
 
   bool isCompleted() {
-    return amphipods.all(isInDesiredRoom);
-  }
-
-  bool isInDesiredRoom(Amphipod amphipod) {
-    final desiredRoom = getDesiredRoom(amphipod);
-    return desiredRoom.points.contains(amphipod.position);
+    return amphipods.all(shouldStayStill);
   }
 
   Room getDesiredRoom(Amphipod amphipod) {
     return rooms.first((room) => room.type == amphipod.type);
   }
 
-  String hashString() {
-    final newMap = map.toMutableMap();
-    for (var amphipod in amphipods.iter) {
-      newMap[amphipod.position] = amphipod.type;
-    }
+  Point2d getVacantPosition(Room room) {
+    final sortedPts = room.points.sortedByDescending((pt) => pt.y);
+    return sortedPts.first((pt) => amphipods.none((a) => a.position == pt));
+  }
 
-    return newMap.getGridString();
+  String hashString() {
+    final sorted = amphipods.sortedBy((a) => a.position.x + (100*a.position.y));
+    return "$sorted";
   }
 
   void prettyPrint() {
@@ -170,8 +175,9 @@ class Amphipod {
 class Move {
   final Amphipod amphipod;
   final Point2d newPosition;
+  final int distance;
 
-  const Move(this.amphipod, this.newPosition);
+  const Move(this.amphipod, this.newPosition, this.distance);
 
   @override
   String toString() => "Move $amphipod to $newPosition";
@@ -192,8 +198,12 @@ BurrowState parseBurrowState(KtMap<Point2d, String> rawInput) {
   final map = rawInput.mapValues((entry) => entry.value == '#' ? '#' : '.');
   final amphipods = _parseAmphipods(rawInput);
   final rooms = _makeRooms(rawInput.yMax() - rawInput.yMin());
-
-  return BurrowState(amphipods, map, rooms, 0, null);
+  final allRoomPoints = rooms.flatMap((room) => room.points + listOf(room.outsideSpace));
+  final emptySpaces = map.filterValues((value) => value == '.');
+  final corridorPoints = emptySpaces.keys - allRoomPoints;
+  final aboveRoomPoints = emptySpaces.filterKeys((pt) => pt.y == 1).keys - corridorPoints;
+  print(aboveRoomPoints);
+  return BurrowState(amphipods, map, rooms, 0, corridorPoints, aboveRoomPoints);
 }
 
 KtList<Amphipod> _parseAmphipods(KtMap<Point2d, String> rawInput) {
@@ -221,7 +231,7 @@ void main(List<String> arguments) {
   partB();
 }
 
-final inputFile = 'example_input';
+final inputFile = 'input';
 void partA() {
   final memo = mutableMapFrom<String, int>();
   final input = readStringGrid('day_23/$inputFile.txt');

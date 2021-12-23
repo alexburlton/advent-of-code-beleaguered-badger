@@ -67,10 +67,16 @@ KtList<String> readDoubleSpacedList(String filename) {
   return input.split('\n\n').toKtList();
 }
 
+String _noOp(String original) => original;
+KtMap<Point, String> readStringGrid(String filename) => parseTextGrid<String>(readStringList(filename), _noOp);
+
 KtMap<Point, int> readIntegerGrid(String filename) => parseIntegerGrid(readStringList(filename));
 KtMap<Point, int> parseIntegerGrid(KtList<String> list, [int Function(String) parser=int.parse]) {
+  return parseTextGrid<int>(list, parser);
+}
+KtMap<Point, T> parseTextGrid<T>(KtList<String> list, T Function(String) parser) {
   final rowLength = list[0].length;
-  final map = mutableMapFrom<Point, int>();
+  final map = mutableMapFrom<Point, T>();
   for (var x=0; x<rowLength; x++) {
     for (var y=0; y<list.size; y++) {
       final pt = Point(x, y);

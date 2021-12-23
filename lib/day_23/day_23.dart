@@ -202,7 +202,6 @@ BurrowState parseBurrowState(KtMap<Point2d, String> rawInput) {
   final emptySpaces = map.filterValues((value) => value == '.');
   final corridorPoints = emptySpaces.keys - allRoomPoints;
   final aboveRoomPoints = emptySpaces.filterKeys((pt) => pt.y == 1).keys - corridorPoints;
-  print(aboveRoomPoints);
   return BurrowState(amphipods, map, rooms, 0, corridorPoints, aboveRoomPoints);
 }
 
@@ -236,7 +235,6 @@ void partA() {
   final memo = mutableMapFrom<String, int>();
   final input = readStringGrid('day_23/$inputFile.txt');
   final burrowState = parseBurrowState(input);
-  print(burrowState.rooms);
   _solveBurrowState(burrowState, memo);
 }
 
@@ -244,7 +242,6 @@ void partB() {
   final memo = mutableMapFrom<String, int>();
   final input = readStringGrid('day_23/${inputFile}_b.txt');
   final burrowState = parseBurrowState(input);
-  print(burrowState.rooms);
   _solveBurrowState(burrowState, memo);
 }
 

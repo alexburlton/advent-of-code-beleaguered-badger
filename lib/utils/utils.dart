@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:beleaguered_badger/utils/point2d.dart';
 import 'package:kt_dart/kt.dart';
@@ -69,18 +68,18 @@ KtList<String> readDoubleSpacedList(String filename) {
 }
 
 String _noOp(String original) => original;
-KtMap<Point2d, String> readStringGrid(String filename) => parseTextGrid<String>(readStringList(filename), _noOp).mapKeys((entry) => Point2d(entry.key.x.toInt(), entry.key.y.toInt()));
+KtMap<Point2d, String> readStringGrid(String filename) => parseTextGrid<String>(readStringList(filename), _noOp);
 
-KtMap<Point, int> readIntegerGrid(String filename) => parseIntegerGrid(readStringList(filename));
-KtMap<Point, int> parseIntegerGrid(KtList<String> list, [int Function(String) parser=int.parse]) {
+KtMap<Point2d, int> readIntegerGrid(String filename) => parseIntegerGrid(readStringList(filename));
+KtMap<Point2d, int> parseIntegerGrid(KtList<String> list, [int Function(String) parser=int.parse]) {
   return parseTextGrid<int>(list, parser);
 }
-KtMap<Point, T> parseTextGrid<T>(KtList<String> list, T Function(String) parser) {
+KtMap<Point2d, T> parseTextGrid<T>(KtList<String> list, T Function(String) parser) {
   final rowLength = list[0].length;
-  final map = mutableMapFrom<Point, T>();
+  final map = mutableMapFrom<Point2d, T>();
   for (var x=0; x<rowLength; x++) {
     for (var y=0; y<list.size; y++) {
-      final pt = Point(x, y);
+      final pt = Point2d(x, y);
       final value = parser(list[y][x]);
       map[pt] = value;
     }
@@ -125,42 +124,6 @@ extension GridUtils2d<T> on KtMap<Point2d, T> {
   }
 }
 
-extension MoreGridUtils<T> on KtMap<Point, T> {
-  KtList<T> getNeighbourValues(Point pt) {
-    final neighbourPts = getNeighbourPoints(pt);
-    return neighbourPts.mapNotNull<T?>((pt) => this[pt]).map((value) => value!);
-  }
-
-  num xMin() => keys.map((pt) => pt.x).min()!;
-  num xMax() => keys.map((pt) => pt.x).max()!;
-  num yMin() => keys.map((pt) => pt.y).min()!;
-  num yMax() => keys.map((pt) => pt.y).max()!;
-
-  String getGridString() {
-    var str = "";
-    final xValues = keys.map((pt) => pt.x);
-    final yValues = keys.map((pt) => pt.y);
-
-    for (var y=yValues.min()!; y<=yValues.max()!; y++) {
-      if (str.isNotEmpty) {
-        str += '\n';
-      }
-
-      var line = "";
-      for (var x=xValues.min()!; x<=xValues.max()!; x++) {
-        line += getValue(Point(x, y)).toString();
-      }
-
-      str += line;
-    }
-
-    return str;
-  }
-  void printGrid() {
-    print(getGridString());
-  }
-}
-
 extension MapUtils<K, V> on KtMutableMap<K, KtList<V>> {
   void putInList(K key, V value) {
     final currentList = getOrDefault(key, emptyList());
@@ -178,13 +141,10 @@ extension CountMapUtils<K, V> on KtMutableMap<K, int> {
 KtList<Point2d> getNeighbourPoints2d(Point2d pt) =>
     [Point2d(pt.x, pt.y-1), Point2d(pt.x, pt.y+1), Point2d(pt.x+1, pt.y), Point2d(pt.x-1, pt.y)].toKtList();
 
-KtList<Point> getNeighbourPoints(Point pt) =>
-  [Point(pt.x, pt.y-1), Point(pt.x, pt.y+1), Point(pt.x+1, pt.y), Point(pt.x-1, pt.y)].toKtList();
+KtList<Point2d> getNeighboursPointsWithDiagonals(Point2d pt) =>
+    getNeighbourPoints2d(pt) + [Point2d(pt.x+1, pt.y-1), Point2d(pt.x+1, pt.y+1), Point2d(pt.x-1, pt.y-1), Point2d(pt.x-1, pt.y+1)].toKtList();
 
-KtList<Point> getNeighboursPointsWithDiagonals(Point pt) =>
-    getNeighbourPoints(pt) + [Point(pt.x+1, pt.y-1), Point(pt.x+1, pt.y+1), Point(pt.x-1, pt.y-1), Point(pt.x-1, pt.y+1)].toKtList();
-
-KtList<Point> getAllNeighboursSorted(Point pt) {
+KtList<Point2d> getAllNeighboursSorted(Point2d pt) {
   final neighboursPlusSelf = getNeighboursPointsWithDiagonals(pt) + listOf(pt);
   return neighboursPlusSelf.sortedBy((pt) => (10000 * pt.y) + pt.x);
 }

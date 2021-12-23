@@ -1,13 +1,14 @@
 import 'dart:core';
 import 'dart:math';
+import 'package:beleaguered_badger/utils/point2d.dart';
 import 'package:beleaguered_badger/utils/utils.dart';
 import 'package:kt_dart/kt.dart';
 
 var map = readIntegerGrid('day_15/input.txt');
-final pointToMinimalCost = mutableMapFrom<Point, int>();
+final pointToMinimalCost = mutableMapFrom<Point2d, int>();
 
 void main(List<String> arguments) {
-  pointToMinimalCost[Point(0, 0)] = map.getValue(Point(0, 0));
+  pointToMinimalCost[Point2d(0, 0)] = map.getValue(Point2d(0, 0));
   partA();
   partB();
 }
@@ -23,12 +24,12 @@ void partB() {
 
 void _findShortestPath() {
   final startTime = DateTime.now().millisecondsSinceEpoch;
-  final startPt = Point(0, 0);
+  final startPt = Point2d(0, 0);
   final endPt = map.keys.maxBy((pt) => pt.x + pt.y)!;
 
   final paths = _getAllPaths(startPt, endPt);
   print('-------');
-  print(_getPathCost(paths.first()) - map.getValue((Point(0, 0))));
+  print(_getPathCost(paths.first()) - map.getValue((Point2d(0, 0))));
   final timeTaken = DateTime.now().millisecondsSinceEpoch - startTime;
   print('${timeTaken}ms');
   print('-------');
@@ -43,7 +44,7 @@ void _replicateMap() {
   for (var x=0; x<5; x++) {
     for (var y=0; y<5; y++) {
       final newValues = map
-          .mapKeys((entry) => Point(entry.key.x + (x * width), entry.key.y + (y * height)))
+          .mapKeys((entry) => Point2d(entry.key.x + (x * width), entry.key.y + (y * height)))
           .mapValues((entry) =>
       (entry.value + x + y) % 10 + (entry.value + x + y) ~/ 10);
 
@@ -54,7 +55,7 @@ void _replicateMap() {
   map = newMap;
 }
 
-KtList<KtList<Point>> _getAllPaths(Point startPt, Point endPt) {
+KtList<KtList<Point2d>> _getAllPaths(Point2d startPt, Point2d endPt) {
   var paths = listOf(listOf(startPt));
   var steps = 0;
   while (!_allFinished(paths, endPt)) {
@@ -71,7 +72,7 @@ KtList<KtList<Point>> _getAllPaths(Point startPt, Point endPt) {
   return paths;
 }
 
-KtList<KtList<Point>> _takeAllSteps(KtList<KtList<Point>> pathsSoFar, Point endPt, bool isMajorStep) {
+KtList<KtList<Point2d>> _takeAllSteps(KtList<KtList<Point2d>> pathsSoFar, Point2d endPt, bool isMajorStep) {
   final allNextSteps = pathsSoFar.flatMap((pathSoFar) {
     final lastPoint = pathSoFar.last();
     if (lastPoint == endPt) {
@@ -79,10 +80,10 @@ KtList<KtList<Point>> _takeAllSteps(KtList<KtList<Point>> pathsSoFar, Point endP
       return listOf(pathSoFar);
     }
 
-    final potentialNextSteps = getNeighbourPoints(lastPoint);
+    final potentialNextSteps = getNeighbourPoints2d(lastPoint);
     final nextSteps = potentialNextSteps.filter((pt) => map.containsKey(pt) && !pathSoFar.contains(pt));
     if (nextSteps.isEmpty()) {
-      return emptyList<KtList<Point>>();
+      return emptyList<KtList<Point2d>>();
     }
     return nextSteps.map((nextStep) => pathSoFar + listOf(nextStep));
   });
@@ -90,13 +91,13 @@ KtList<KtList<Point>> _takeAllSteps(KtList<KtList<Point>> pathsSoFar, Point endP
   return _removeSuboptimalRoutes(allNextSteps, isMajorStep);
 }
 
-KtList<KtList<Point>> _removeSuboptimalRoutes(KtList<KtList<Point>> pathsSoFar, bool isMajorStep) {
+KtList<KtList<Point2d>> _removeSuboptimalRoutes(KtList<KtList<Point2d>> pathsSoFar, bool isMajorStep) {
   _updateMinimalCostsMemo(pathsSoFar);
   final potentialMinimalPaths = pathsSoFar.filter((path) => _pathCouldBeMinimal(path, isMajorStep));
   return potentialMinimalPaths.distinctBy((p0) => p0.last());
 }
 
-bool _pathCouldBeMinimal(KtList<Point> path, bool isMajorStep) {
+bool _pathCouldBeMinimal(KtList<Point2d> path, bool isMajorStep) {
   final startIndex = isMajorStep ? max(path.size - 50, 0) : max(path.size - 5, 0);
   for (var i=path.size - 1; i>=startIndex; i--) {
     final pt = path[i];
@@ -109,7 +110,7 @@ bool _pathCouldBeMinimal(KtList<Point> path, bool isMajorStep) {
   return true;
 }
 
-void _updateMinimalCostsMemo(KtList<KtList<Point>> pathsSoFar) {
+void _updateMinimalCostsMemo(KtList<KtList<Point2d>> pathsSoFar) {
   final groupings = pathsSoFar.groupBy((path) => path.last());
   final pointToBestCosts = groupings.mapValues((entry) => entry.value.map(_getPathCost).min()!);
 
@@ -119,8 +120,8 @@ void _updateMinimalCostsMemo(KtList<KtList<Point>> pathsSoFar) {
   }
 }
 
-int _getPathCost(KtList<Point> path) => path.sumBy((pt) => map.getValue(pt));
+int _getPathCost(KtList<Point2d> path) => path.sumBy((pt) => map.getValue(pt));
 
-bool _allFinished(KtList<KtList<Point>> paths, Point endPt) => paths.all((path) => _isFinished(path, endPt));
+bool _allFinished(KtList<KtList<Point2d>> paths, Point2d endPt) => paths.all((path) => _isFinished(path, endPt));
 
-bool _isFinished(KtList<Point> path, Point endPt) => path.last() == endPt;
+bool _isFinished(KtList<Point2d> path, Point2d endPt) => path.last() == endPt;

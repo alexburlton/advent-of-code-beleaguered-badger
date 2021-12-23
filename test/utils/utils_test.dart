@@ -1,5 +1,4 @@
-import 'dart:math';
-
+import 'package:beleaguered_badger/utils/point2d.dart';
 import 'package:kt_dart/kt.dart';
 import 'package:test/test.dart';
 import 'package:beleaguered_badger/utils/utils.dart';
@@ -18,19 +17,19 @@ void main() {
   });
 
   test('neighbours', () {
-    final neighbours = getNeighboursPointsWithDiagonals(Point(1, 1));
+    final neighbours = getNeighboursPointsWithDiagonals(Point2d(1, 1));
     expect(neighbours.size, equals(8));
-    expect(neighbours.iter, containsAll([Point(0, 0), Point(0, 1), Point(0, 2), Point(1, 0), Point(1, 2), Point(2, 0), Point(2, 1), Point(2, 2)]));
+    expect(neighbours.iter, containsAll([Point2d(0, 0), Point2d(0, 1), Point2d(0, 2), Point2d(1, 0), Point2d(1, 2), Point2d(2, 0), Point2d(2, 1), Point2d(2, 2)]));
   });
 
   test('sorted neighbours', () {
-    final neighbours = getAllNeighboursSorted(Point(5, 10));
-    expect(neighbours[0], equals(Point(4, 9)));
-    expect(neighbours[1], equals(Point(5, 9)));
-    expect(neighbours[2], equals(Point(6, 9)));
-    expect(neighbours[3], equals(Point(4, 10)));
-    expect(neighbours[4], equals(Point(5, 10)));
-    expect(neighbours[5], equals(Point(6, 10)));
+    final neighbours = getAllNeighboursSorted(Point2d(5, 10));
+    expect(neighbours[0], equals(Point2d(4, 9)));
+    expect(neighbours[1], equals(Point2d(5, 9)));
+    expect(neighbours[2], equals(Point2d(6, 9)));
+    expect(neighbours[3], equals(Point2d(4, 10)));
+    expect(neighbours[4], equals(Point2d(5, 10)));
+    expect(neighbours[5], equals(Point2d(6, 10)));
   });
 
   test('parse binary', () {

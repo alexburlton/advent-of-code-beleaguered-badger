@@ -1,0 +1,211 @@
+inp w      //d1
+mul x 0
+add x 1
+mul y 0
+add y 26
+mul z y
+mul y 0
+add y w
+add y 14
+add z y    // A = d1+14
+
+inp w      //d2
+mul x 0
+add x 1
+mul y 0
+add y 26
+mul z y
+mul y 0
+add y w
+add y 2
+add z y    // B = d2+2
+
+inp w      //d3
+mul x 0
+add x 1
+mul y 0
+add y 26
+mul z y
+mul y 0
+add y w
+add y 1
+add z y    // C = d3+1
+
+inp w      //d4
+mul x 0
+add x 1
+mul y 0
+add y 26
+mul z y
+mul y 0
+add y w
+add y 13
+add z y    // D = d4+13
+
+inp w      //d5
+mul x 0
+add x 1
+mul y 0
+add y 26
+mul z y
+mul y 0
+add y w
+add y 5
+add z y    // E = d5+5
+
+inp w      //d6
+mul x 0
+add x z
+mod x 26   // x = E = d5+5
+div z 26   // z now storing A,B,C,D - E has been floored out
+add x -12  // x = d5-7
+eql x w    // to zero this out, we want [d6=d5-7]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y    // then multiply by 1 rather than 26 here...
+mul y 0
+add y w
+add y 5
+mul y x
+add z y   // and don't add anything to do with d6! So d6=d5-7
+
+inp w     //d7
+mul x 0
+add x z
+mod x 26  // x=D=d4+13
+div z 26  // Z now storing A,B,C - D has been floored out
+add x -12 // x=d4+1
+eql x w   // so want [d7=d4+1]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 5
+mul y x
+add z y  // nothing added here
+
+inp w    //d8
+mul x 0
+add x 1
+mul y 0
+add y 26
+mul z y
+mul y 0
+add y w
+add y 9
+mul y x
+add z y // F = d8+9,  Z is storing A,B,C,F
+
+inp w    //d9
+mul x 0
+add x z
+mod x 26 // x = F
+div z 26 // Z now storing A,B,C - F floored out
+add x -7 // x = d8+2
+eql x w  // want [d9=d8+2]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 3
+mul y x
+add z y   // Z storing A,B,C
+
+inp w     //d10
+mul x 0
+add x 1
+mul y 0
+add y 26
+mul z y
+mul y 0
+add y w
+add y 13
+mul y x
+add z y  // G=d10+13,  Z storing A,B,C,G
+
+inp w    // d11
+mul x 0
+add x z
+mod x 26  // x=G=d10+13
+div z 26  // Z storing A,B,C
+add x -8  // x = d10+5
+eql x w   // want [d11=d10+5]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 2
+mul y x
+add z y   // Z storing A,B,C
+
+inp w     //d12
+mul x 0
+add x z
+mod x 26  // x = C = d3+1
+div z 26  // Z storing A,B
+add x -5  // x = d3-4
+eql x w   // want [d12=d3-4]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 1
+mul y x
+add z y   // Z storing A,B
+
+inp w    //d13
+mul x 0
+add x z
+mod x 26  // x = B = d2+2
+div z 26  // Z storing A
+add x -10 // x=d2-8
+eql x w   // want [d13=d2-8]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 11
+mul y x
+add z y   // Z storing A
+
+inp w    //d14
+mul x 0
+add x z
+mod x 26 // x = A = d1+14
+div z 26 // z=1
+add x -7 // x = d1+7
+eql x w  // want [d14=d1+7]
+eql x 0
+mul y 0
+add y 25
+mul y x
+add y 1
+mul z y
+mul y 0
+add y w
+add y 8
+mul y x
+add z y

@@ -17,9 +17,8 @@ class BurrowState {
   final int energyExpended;
   final KtSet<Point2d> corridorPoints;
   final KtSet<Point2d> aboveRoomPoints;
-  final Amphipod? movingAmphipod;
 
-  const BurrowState(this.amphipods, this.map, this.rooms, this.energyExpended, this.corridorPoints, this.aboveRoomPoints, [this.movingAmphipod]);
+  const BurrowState(this.amphipods, this.map, this.rooms, this.energyExpended, this.corridorPoints, this.aboveRoomPoints);
 
   BurrowState makeMove(Move move) {
     final movingAmphipod = move.amphipod;
@@ -29,14 +28,10 @@ class BurrowState {
     final newAmphipods = otherAmphipods + listOf(updatedAmphipod);
     final updatedEnergy = energyExpended + (move.distance * _amphipodCosts.getValue(movingAmphipod.type));
 
-    return BurrowState(newAmphipods, map, rooms, updatedEnergy, corridorPoints, aboveRoomPoints, updatedAmphipod);
+    return BurrowState(newAmphipods, map, rooms, updatedEnergy, corridorPoints, aboveRoomPoints);
   }
 
   KtList<Move> getPossibleMoves() {
-    if (rooms.any((room) => movingAmphipod?.position == room.outsideSpace)) {
-      return getPossibleMovesForAmphipod(movingAmphipod!);
-    }
-
     final movableAmphipods = amphipods.filterNot(shouldStayStill);
     final amphipodInRangeOfRoom = movableAmphipods.firstOrNull((amphipod) => canReachRoom(amphipod));
     if (amphipodInRangeOfRoom != null) {

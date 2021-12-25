@@ -88,6 +88,28 @@ KtMap<Point2d, T> parseTextGrid<T>(KtList<String> list, T Function(String) parse
   return map.toMap();
 }
 
+extension PointUtils2d on KtSet<Point2d> {
+  String getGridString() {
+    var str = "";
+    final xValues = map((pt) => pt.x);
+    final yValues = map((pt) => pt.y);
+
+    for (var y=yValues.min()!; y<=yValues.max()!; y++) {
+      if (str.isNotEmpty) {
+        str += '\n';
+      }
+
+      var line = "";
+      for (var x=xValues.min()!; x<=xValues.max()!; x++) {
+        line += contains(Point2d(x, y)) ? '#' : '.';
+      }
+
+      str += line;
+    }
+
+    return str;
+  }
+}
 extension GridUtils2d<T> on KtMap<Point2d, T> {
   KtList<T> getNeighbourValues(Point2d pt) {
     final neighbourPts = getNeighbourPoints2d(pt);
